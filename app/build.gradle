@@ -1,0 +1,26 @@
+apply plugin: 'com.android.application'
+
+android {
+  compileSdkVersion rootProject.ext.compileSdkVersion
+  buildToolsVersion rootProject.ext.buildToolsVersion
+    useLibrary  'org.apache.http.legacy'
+
+  defaultConfig {
+    minSdkVersion rootProject.ext.minSdkVersion
+    targetSdkVersion rootProject.ext.compileSdkVersion
+    applicationId "com.github.pwittchen.reactivebeacons"
+    versionCode 1
+    versionName "1.0"
+  }
+
+  lintOptions {
+    disable 'MissingTranslation'
+  }
+}
+
+dependencies {
+  compile deps.appcompatv7
+  compile deps.rxandroid2
+  compile project(':library')
+  compile 'org.altbeacon:android-beacon-library:2.9.2'
+}
