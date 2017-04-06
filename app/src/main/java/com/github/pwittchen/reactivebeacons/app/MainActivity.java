@@ -17,12 +17,15 @@ package com.github.pwittchen.reactivebeacons.app;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -36,6 +39,7 @@ import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.Identifier;
+import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.logging.Logger;
@@ -57,6 +61,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -67,34 +73,68 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
       Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
   private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
   private static final String ITEM_FORMAT = "MAC: %s, RSSI: %d\ndistance: %.2fm, proximity: %s\n%s";
+  private static final String BEACON_DISPLAY_FORMAT = "Beacon:%s \n distance: %s" ;
+
   private BeaconManager mBeaconManager;
   private String beaconName ="";
   private ReactiveBeacons reactiveBeacons;
   private Disposable subscription;
   private String TAG = "MainActivity";
+  private int itemLayoutId = android.R.layout.simple_list_item_1;
   private ListView lvBeacons;
   private Map<String, Beacon> beacons;
-
+  private BeaconManager beaconManager;
+  private int BeaconStatus;
+  private static final Pattern urlPattern = Pattern.compile(
+          "(?:^|[\\W])((ht|f)tp(s?):\\/\\/|www\\.)"
+                  + "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+\\/?)*"
+                  + "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]\\*$~@!:/{};']*)",
+          Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     lvBeacons = (ListView) findViewById(R.id.lv_beacons);
+    lvBeacons.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+      public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,long arg3) {
+        int matchStart=0,matchEnd=0;
+        String Intenturl="";
+        String data=(String)arg0.getItemAtPosition(arg2);
+        com.orhanobut.logger.Logger.i("Position->>Data"+data);
+        String Rese ="http://" + data.substring(7) ;
+        Log.i("Nick",Rese);
+        Matcher matcher = urlPattern.matcher(Rese);
+        while (matcher.find()) {
+            matchStart = matcher.start(1);
+           matchEnd = matcher.end();
+          com.orhanobut.logger.Logger.i("Position"+ matchStart + " "  +matchEnd);
+           Intenturl = data.substring(matchStart,matchEnd);
+          // now you have the offsets of a URL match
+        }
+
+        Log.i("Nick->>",Intenturl);
+        Intent intent = new Intent(MainActivity.this, WebviewActivity.class);
+        Log.i("opo",Intenturl.substring(7,Intenturl.lastIndexOf(".")));
+        intent.putExtra("url",Intenturl.substring(7,Intenturl.lastIndexOf(".")));
+        startActivity(intent);
+      }
+    });
     reactiveBeacons = new ReactiveBeacons(this);
     beacons = new HashMap<>();
   }
 
   @Override protected void onResume() {
     super.onResume();
+    beaconManager = BeaconManager.getInstanceForApplication(this);
     mBeaconManager = BeaconManager.getInstanceForApplication(this.getApplicationContext());
     // Detect the URL frame:
     mBeaconManager.getBeaconParsers().add(new BeaconParser().
             setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
     mBeaconManager.bind(this);
-    if (!canObserveBeacons()) {
-      return;
-    }
-
-    startSubscription();
+//    if (!canObserveBeacons()) {
+//      return;
+//    }
+//
+//    startSubscription();
   }
 
   private void startSubscription() {
@@ -158,12 +198,6 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
     return String.format(ITEM_FORMAT, mac, rssi, distance, proximity, beaconName);
   }
 
-//  @Override protected void onPause() {
-//    super.onPause();
-//    if (subscription != null && !subscription.isDisposed()) {
-//      subscription.dispose();
-//    }
-//  }
 
   @Override public void onRequestPermissionsResult(int requestCode,
       @android.support.annotation.NonNull String[] permissions,
@@ -196,47 +230,104 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
   private boolean isGranted(String permission) {
     return ActivityCompat.checkSelfPermission(this, permission) == PERMISSION_GRANTED;
   }
-
-
-
+  @Override
   public void onBeaconServiceConnect() {
     Region region = new Region("all-beacons-region", null, null, null);
+
     try {
       mBeaconManager.startRangingBeaconsInRegion(region);
     } catch (RemoteException e) {
+      com.orhanobut.logger.Logger.i("approximately + catch");
       e.printStackTrace();
     }
     mBeaconManager.setRangeNotifier(this);
+    beaconManager.addMonitorNotifier(new MonitorNotifier() {
+      @Override
+      public void didEnterRegion(Region region) {
+        Log.i(TAG, "I just saw an beacon for the first time!");
+      }
+
+      @Override
+      public void didExitRegion(Region region) {
+        Log.i(TAG, "I no longer see an beacon");
+      }
+
+      @Override
+      public void didDetermineStateForRegion(int state, Region region) {
+        BeaconStatus = state;
+        Log.i(TAG, "I have just switched from seeing/not seeing beacons: "+state);
+      }
+    });
+
+    try {
+      beaconManager.startMonitoringBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
+    } catch (RemoteException e) {    }
   }
+
+
+
 
   @Override
   public void didRangeBeaconsInRegion(Collection<org.altbeacon.beacon.Beacon> beacons, Region region) {
     final List<String> list = new ArrayList<>();
-
+    String Intenturl="";
     for (org.altbeacon.beacon.Beacon beacon : beacons) {
-      String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
-      Log.d(TAG, "I see a beacon transmitting a url: " + url +
-              " approximately " + beacon.getDistance() + " meters away.");
-      DefaultHttpClient httpClient = new DefaultHttpClient();
-      HttpGet httpGet = new HttpGet("https://www.youtube.com");
-      ResponseHandler<String> resHandler = new BasicResponseHandler();
-      try {
-        String page = httpClient.execute(httpGet, resHandler);
-        Log.i("WEBSITE INFO->>",page);
-      } catch (IOException e) {
-        e.printStackTrace();
+      if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
+        String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
+        String distance = " "+beacon.getDistance();
+        Log.d(TAG, "I see a beacon transmitting a url: " + url +
+                " approximately " + beacon.getDistance() + " meters away.");
+        int matchStart=0,matchEnd=0;
+        Matcher matcher = urlPattern.matcher(url);
+        while (matcher.find()) {
+          matchStart = matcher.start(1);
+          matchEnd = matcher.end();
+          com.orhanobut.logger.Logger.i("Position"+ matchStart + " "  +matchEnd);
+          Intenturl = url.substring(matchStart,matchEnd);
+          // now you have the offsets of a URL match
+        }
+        String keyword = Intenturl;
+        keyword = keyword.substring(keyword.lastIndexOf("/")+1);
+        String item = String.format(BEACON_DISPLAY_FORMAT, keyword,distance);
+        com.orhanobut.logger.Logger.i("approximately" + keyword);
+        list.add(item);
+
+        runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+
+            lvBeacons.setAdapter(new ArrayAdapter<>(MainActivity.this, itemLayoutId, list));
+
+          }
+        });
+
+
       }
-      list.add(url);
+
+
+    }
+    com.orhanobut.logger.Logger.i("BEACONSTATUS" + BeaconStatus );
+    com.orhanobut.logger.Logger.i(canObserveBeacons()+"approximately + endoffor");
+    if (BeaconStatus==0)
+    {
+      com.orhanobut.logger.Logger.i(canObserveBeacons()+"approximately + endif");
+      list.clear();
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+
+          lvBeacons.setAdapter(new ArrayAdapter<>(MainActivity.this, itemLayoutId, list));
+
+        }
+      });
+
+
     }
 
-    final int itemLayoutId = android.R.layout.simple_list_item_1;
-    runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        lvBeacons.setAdapter(new ArrayAdapter<>(MainActivity.this, itemLayoutId, list));
-
-      }
-    });
+//    if (mBeaconManager.checkAvailability()) {
+////    list.clear();
+//      com.orhanobut.logger.Logger.i("approximately + false");
+//    }
 //    lvBeacons.setAdapter(new ArrayAdapter<>(this, itemLayoutId, list));
 //    for (org.altbeacon.beacon.Beacon beacon : beacons) {
 //      if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
