@@ -16,12 +16,17 @@
 package com.github.pwittchen.reactivebeacons.app;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
@@ -81,7 +86,9 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
   private Disposable subscription;
   private String TAG = "MainActivity";
   private int itemLayoutId = android.R.layout.simple_list_item_1;
+  private NotificationManager notif;
   private ListView lvBeacons;
+  private Notification notify;
   private Map<String, Beacon> beacons;
   private BeaconManager beaconManager;
   private int BeaconStatus;
@@ -267,10 +274,13 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
 
 
+  @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+  @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
   @Override
   public void didRangeBeaconsInRegion(Collection<org.altbeacon.beacon.Beacon> beacons, Region region) {
     final List<String> list = new ArrayList<>();
     String Intenturl="";
+    String item ="";
     for (org.altbeacon.beacon.Beacon beacon : beacons) {
       if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
         String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
@@ -288,14 +298,26 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         }
         String keyword = Intenturl;
         keyword = keyword.substring(keyword.lastIndexOf("/")+1);
-        String item = String.format(BEACON_DISPLAY_FORMAT, keyword,distance.substring(0,6));
-        com.orhanobut.logger.Logger.i("approximately" + keyword);
-        list.add(item);
 
+        notif=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        notify=new Notification.Builder
+                (getApplicationContext()).setContentTitle(keyword).setContentText("Beacons Around You").
+                setContentTitle(keyword).setSmallIcon(R.mipmap.ic_launcher).build();
+
+        notify.flags |= Notification.FLAG_AUTO_CANCEL;
+
+        item = String.format(BEACON_DISPLAY_FORMAT, keyword,distance.substring(0,6));
+        com.orhanobut.logger.Logger.i("approximately" + keyword);
+
+
+        final String finalItem = item;
         runOnUiThread(new Runnable() {
           @Override
           public void run() {
-
+            list.add(finalItem);
+            for (int i=0;i<list.size();i++) {
+              notif.notify(i, notify);
+            }
             lvBeacons.setAdapter(new ArrayAdapter<>(MainActivity.this, itemLayoutId, list));
 
           }
