@@ -60,8 +60,8 @@ public class WebviewActivity extends Activity {
         String s = getIntent().getStringExtra("url");
         Log.i("InteUrl", s);
         urll = urll + s;
-        String s2 = ".php";
-        urll = urll + s2;
+//        String s2 = ".php";
+        urll = urll ;
         Log.i("UlrResourcefinal",urll);
         Logger.i("UlrResourcefinal"+ urll);
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
@@ -72,7 +72,9 @@ public class WebviewActivity extends Activity {
         WebSettings settings = mWebView.getSettings();
         settings.setJavaScriptEnabled(true);
         mWebView.setWebChromeClient(getChromeClient());
+        mWebView.clearCache(true);
         mWebView.loadUrl(urll);
+        mWebView.reload();
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Loading...");
         progressDialog.show();

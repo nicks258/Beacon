@@ -73,7 +73,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
       Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
   private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
   private static final String ITEM_FORMAT = "MAC: %s, RSSI: %d\ndistance: %.2fm, proximity: %s\n%s";
-  private static final String BEACON_DISPLAY_FORMAT = "Beacon:%s \n distance: %s" ;
+  private static final String BEACON_DISPLAY_FORMAT = "Beacon:%s \n distance: %s m" ;
 
   private BeaconManager mBeaconManager;
   private String beaconName ="";
@@ -288,7 +288,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         }
         String keyword = Intenturl;
         keyword = keyword.substring(keyword.lastIndexOf("/")+1);
-        String item = String.format(BEACON_DISPLAY_FORMAT, keyword,distance);
+        String item = String.format(BEACON_DISPLAY_FORMAT, keyword,distance.substring(0,6));
         com.orhanobut.logger.Logger.i("approximately" + keyword);
         list.add(item);
 
