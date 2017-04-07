@@ -63,6 +63,7 @@ import io.reactivex.schedulers.Schedulers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
       Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
   private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
   private static final String ITEM_FORMAT = "MAC: %s, RSSI: %d\ndistance: %.2fm, proximity: %s\n%s";
-  private static final String BEACON_DISPLAY_FORMAT = "Beacon:%s \n distance: %s m" ;
+  private static final String BEACON_DISPLAY_FORMAT = "Distance: %sm \n Beacon:%s " ;
 
   private BeaconManager mBeaconManager;
   private String beaconName ="";
@@ -285,6 +286,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
       if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
         String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
         String distance = " "+beacon.getDistance();
+        com.orhanobut.logger.Logger.i(""+beacon.getDistance()+ " Collection Size"+ beacons.size());
         Log.d(TAG, "I see a beacon transmitting a url: " + url +
                 " approximately " + beacon.getDistance() + " meters away.");
         int matchStart=0,matchEnd=0;
@@ -306,10 +308,8 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
         notify.flags |= Notification.FLAG_AUTO_CANCEL;
 
-        item = String.format(BEACON_DISPLAY_FORMAT, keyword,distance.substring(0,6));
+        item = String.format(BEACON_DISPLAY_FORMAT,distance.substring(0,6), keyword);
         com.orhanobut.logger.Logger.i("approximately" + keyword);
-
-
         final String finalItem = item;
         runOnUiThread(new Runnable() {
           @Override
@@ -318,7 +318,9 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             for (int i=0;i<list.size();i++) {
               notif.notify(i, notify);
             }
-            lvBeacons.setAdapter(new ArrayAdapter<>(MainActivity.this, itemLayoutId, list));
+
+            Collections.sort(list);
+            lvBeacons.setAdapter(new ArrayAdapter<>(MainActivity.this, R.layout.item_layout, list));
 
           }
         });

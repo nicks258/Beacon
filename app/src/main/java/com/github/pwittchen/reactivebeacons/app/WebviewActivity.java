@@ -51,7 +51,7 @@ public class WebviewActivity extends Activity {
 
     private boolean mbErrorOccured = false;
     private boolean mbReloadPressed = false;
-    String urll = "http://68dec501.ngrok.io/beacon/pages/locate.php?url=";
+    String urll = "http://69b689ec.ngrok.io/beacon/pages/locate.php?url=";
     private ProgressDialog progressDialog;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
@@ -306,6 +306,9 @@ public class WebviewActivity extends Activity {
         };
     }
 
-
-
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        this.finish();
+    }
 }

@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     tools:context="com.github.pwittchen.reactivebeacons.app.MainActivity"
     >
 <android.support.v7.widget.Toolbar
@@ -21,18 +20,24 @@
       android:layout_height="wrap_content"
       android:textStyle="bold"
       android:textColor="#fff"
-
       android:gravity="center"
       android:text="Beacon Store"
       android:textSize="30dp" />
 </android.support.v7.widget.Toolbar>
-  <ListView
-      android:paddingTop="20dp"
-      android:layout_below="@+id/toolbar"
-      android:id="@+id/lv_beacons"
+  <TextView
+      android:paddingTop="10dp"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      />
-
-
+      android:text="Near By Beacons"
+      android:gravity="center"
+      android:textColor="#000"
+      android:textSize="20dp"
+      android:layout_below="@+id/toolbar"
+      android:id="@+id/title"/>
+  <ListView
+      android:paddingTop="20dp"
+      android:layout_below="@+id/title"
+      android:id="@+id/lv_beacons"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
 </RelativeLayout>
