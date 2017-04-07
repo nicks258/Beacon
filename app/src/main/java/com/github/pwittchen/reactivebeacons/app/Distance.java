@@ -4,20 +4,96 @@ package com.github.pwittchen.reactivebeacons.app;
  * Created by sumitm on 07-Apr-17.
  */
 
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.support.annotation.NonNull;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+import com.github.pwittchen.reactivebeacons.R;
+import com.orhanobut.logger.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class Distance implements Comparable<String> {
+public class Distance extends ArrayAdapter<String> {
+    public View v;
+    Context mContext;
+    private static final Pattern urlPattern = Pattern.compile(
+            "(?:^|[\\W])((ht|f)tp(s?):\\/\\/|www\\.)"
+                    + "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+\\/?)*"
+                    + "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]\\*$~@!:/{};']*)",
+            Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+    List<String> beaconList = new ArrayList<>();
+    public Distance(Context context, int item_layout, List<String> list) {
+        super(context, item_layout,list);
+        this.mContext = context;
+        this.beaconList = list;
+    }
+    @Override
+    public int getCount() {
+        return super.getCount();
+    }
+    public View getView(int pos, View convertView, ViewGroup parent) {
+        View v = convertView;
+        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        v = inflater.inflate(R.layout.item_layout, null);
+        TextView tv = (TextView) v.findViewById(R.id.Itemname);
 
-    private String name;
-    private String phone;
+        // Moved this outside the if blocks, because we need it regardless
+        // of the value of timeLeft.
+        tv.setText(getItem(pos));
+        final int Pos = pos;
+        tv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int matchStart=0,matchEnd=0;
+                String Intenturl="";
+                String data=getItem(Pos);
+                Log.i("POS" + getItem(Pos),"LION");
+                com.orhanobut.logger.Logger.i("Position->>Data"+data);
+                String Rese ="http://" + data.substring(27) ;
+                Log.i("Nick",Rese.substring(7,Rese.length()-4));
+//                Matcher matcher = urlPattern.matcher(Rese);
+//                while (matcher.find()) {
+//                    matchStart = matcher.start(1);
+//                    matchEnd = matcher.end();
+//                    com.orhanobut.logger.Logger.i("Position"+ matchStart + " "  +matchEnd);
+//                    Intenturl = data.substring(matchStart,matchEnd);
+//                    // now you have the offsets of a URL match
+//                }
+                Intenturl = Rese.substring(7,Rese.length()-5);
+                Log.i("Nick->>",Intenturl);
+                Intent intent = new Intent(getContext(), WebviewActivity.class);
 
-    public int compareTo(String other) {
-        return name.compareTo(other);
+//                Log.i("opo",Intenturl.substring(7,Intenturl.lastIndexOf(".")));
+                intent.putExtra("url",Intenturl);
+                v.getContext().startActivity(intent);
+            }
+        });
+        if (pos == 0) {
+            //TextView tv = (TextView)v.findViewById(R.id.list_content);
+            //tv.setText(str[pos]);
+            tv.setTextColor(Color.BLACK);
+            tv.setTypeface(null, Typeface.BOLD);
+
+        } else {
+            //TextView tv = (TextView)v.findViewById(R.id.list_content);
+            //tv.setText(str[pos]);
+//            tv.setTextColor(Color.RED);
+        }
+
+        return v;
     }
 }

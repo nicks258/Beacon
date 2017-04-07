@@ -91,6 +91,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
   private ListView lvBeacons;
   private Notification notify;
   private Map<String, Beacon> beacons;
+  private Distance myAdapter;
   private BeaconManager beaconManager;
   private int BeaconStatus;
   private static final Pattern urlPattern = Pattern.compile(
@@ -102,30 +103,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     lvBeacons = (ListView) findViewById(R.id.lv_beacons);
-    lvBeacons.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,long arg3) {
-        int matchStart=0,matchEnd=0;
-        String Intenturl="";
-        String data=(String)arg0.getItemAtPosition(arg2);
-        com.orhanobut.logger.Logger.i("Position->>Data"+data);
-        String Rese ="http://" + data.substring(7) ;
-        Log.i("Nick",Rese);
-        Matcher matcher = urlPattern.matcher(Rese);
-        while (matcher.find()) {
-            matchStart = matcher.start(1);
-           matchEnd = matcher.end();
-          com.orhanobut.logger.Logger.i("Position"+ matchStart + " "  +matchEnd);
-           Intenturl = data.substring(matchStart,matchEnd);
-          // now you have the offsets of a URL match
-        }
 
-        Log.i("Nick->>",Intenturl);
-        Intent intent = new Intent(MainActivity.this, WebviewActivity.class);
-        Log.i("opo",Intenturl.substring(7,Intenturl.lastIndexOf(".")));
-        intent.putExtra("url",Intenturl.substring(7,Intenturl.lastIndexOf(".")));
-        startActivity(intent);
-      }
-    });
     reactiveBeacons = new ReactiveBeacons(this);
     beacons = new HashMap<>();
   }
@@ -304,8 +282,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         notif=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         notify=new Notification.Builder
                 (getApplicationContext()).setContentTitle(keyword).setContentText("Beacons Around You").
-                setContentTitle(keyword).setSmallIcon(R.mipmap.ic_launcher).build();
-
+                setContentTitle(keyword).setSmallIcon(R.mipmap.shopcolo).build();
         notify.flags |= Notification.FLAG_AUTO_CANCEL;
 
         item = String.format(BEACON_DISPLAY_FORMAT,distance.substring(0,6), keyword);
@@ -318,9 +295,37 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             for (int i=0;i<list.size();i++) {
               notif.notify(i, notify);
             }
-
             Collections.sort(list);
-            lvBeacons.setAdapter(new ArrayAdapter<>(MainActivity.this, R.layout.item_layout, list));
+            myAdapter=new Distance(getApplicationContext(),R.layout.item_layout,list);
+            lvBeacons.setAdapter(myAdapter);
+//            lvBeacons.setOnItemClickListener( new AdapterView.OnItemClickListener() {
+//
+//              @Override
+//              public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,long arg3) {
+//                com.orhanobut.logger.Logger.i("Hello Sumit");
+//                int matchStart=0,matchEnd=0;
+//                String Intenturl="";
+//                String data=(String)arg0.getItemAtPosition(arg2);
+//                com.orhanobut.logger.Logger.i("Position->>Data"+data);
+//                String Rese ="http://" + data.substring(7) ;
+//                Log.i("Nick",Rese);
+//                Matcher matcher = urlPattern.matcher(Rese);
+//                while (matcher.find()) {
+//                  matchStart = matcher.start(1);
+//                  matchEnd = matcher.end();
+//                  com.orhanobut.logger.Logger.i("Position"+ matchStart + " "  +matchEnd);
+//                  Intenturl = data.substring(matchStart,matchEnd);
+//                  // now you have the offsets of a URL match
+//                }
+//
+//                Log.i("Nick->>",Intenturl);
+//                Intent intent = new Intent(MainActivity.this, WebviewActivity.class);
+//                Log.i("opo",Intenturl.substring(7,Intenturl.lastIndexOf(".")));
+//                intent.putExtra("url",Intenturl.substring(7,Intenturl.lastIndexOf(".")));
+//                startActivity(intent);
+//              }
+//            });
+
 
           }
         });
