@@ -21,7 +21,6 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,11 +28,8 @@ import android.os.RemoteException;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 import com.github.pwittchen.reactivebeacons.R;
 import com.github.pwittchen.reactivebeacons.library.rx2.Beacon;
@@ -101,7 +97,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
           Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_main);
+    setContentView(R.layout.beacon_distance);
     lvBeacons = (ListView) findViewById(R.id.lv_beacons);
 
     reactiveBeacons = new ReactiveBeacons(this);

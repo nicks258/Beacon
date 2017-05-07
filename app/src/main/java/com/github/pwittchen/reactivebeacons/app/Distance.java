@@ -76,6 +76,7 @@ public class Distance extends ArrayAdapter<String> {
 
 //                Log.i("opo",Intenturl.substring(7,Intenturl.lastIndexOf(".")));
                 intent.putExtra("url",Intenturl);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 v.getContext().startActivity(intent);
             }
         });
