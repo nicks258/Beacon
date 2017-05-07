@@ -50,9 +50,6 @@ public class Distance extends ArrayAdapter<String> {
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         v = inflater.inflate(R.layout.item_layout, null);
         TextView tv = (TextView) v.findViewById(R.id.Itemname);
-
-        // Moved this outside the if blocks, because we need it regardless
-        // of the value of timeLeft.
         tv.setText(getItem(pos));
         final int Pos = pos;
         tv.setOnClickListener(new View.OnClickListener() {
